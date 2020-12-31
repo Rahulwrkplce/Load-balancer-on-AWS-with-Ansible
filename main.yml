@@ -1,0 +1,44 @@
+- hosts: tag_server_backend
+  vars:
+        x:
+           - "httpd"
+           - "php"
+
+  tasks:
+     - package:
+             name: "{{ item }}"
+             state: present
+       loop: "{{ x }}"
+
+     - copy:
+         src: /home/ec2-user/wshaproxy/ifconfig.php
+         dest: /var/www/html/ifconfig.php
+
+     - service:
+        name: "{{ x[0] }}"
+        state: started
+
+     - selinux:
+        policy: targeted
+        state: permissive
+       ignore_errors: yes
+
+- hosts: tag_server_haproxy
+  tasks:
+   - package:
+       name: haproxy
+       state: present
+
+   - template:
+       src: /home/ec2-user/wshaproxy/haproxy.cfg
+       dest: /etc/haproxy/haproxy.cfg
+
+   - selinux:
+        policy: targeted
+        state: permissive
+     ignore_errors: yes
+
+   - service:
+        name: haproxy
+        state: restarted
+
